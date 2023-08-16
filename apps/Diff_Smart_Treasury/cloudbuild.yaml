@@ -1,8 +1,0 @@
-steps:
- - name: 'gcr.io/cloud-builders/gcloud'
-   entrypoint: 'bq'
-   id: 'select vendors data from VendorsMD'
-   args:
-   - query
-   - --use_legacy_sql=false
-   - 'SELECT Client_MANDT, AccountNumberOfVendorOrCreditor_LIFNR, CountryKey_LAND1, NAME1, NAME2, NAME3, NAME4, City_ORT01, District_ORT02, Region__REGIO, StreetAndHouseNumber_STRAS, Address_ADRNR FROM `${PROJECT_ID}.CORTEX_SAP_REPORTING.VendorsMD`'
