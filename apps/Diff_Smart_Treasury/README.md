@@ -8,6 +8,8 @@ While the solution is particularly beneficial for companies that rely on manual 
 
 Overall, Bank Data Validation empowers Treasury and AP users to control, validate, and maintain accurate bank information, resulting in enhanced financial operations and reduced errors in payment processing.
 
+For More Information visit our [YouTube Channel](https://www.youtube.com/playlist?list=PLlUWdSjbRKiNjm96SDYI66Y95pAbjGdPu).
+
 ## Index
 
 1. [Features](#features)
@@ -16,8 +18,8 @@ Overall, Bank Data Validation empowers Treasury and AP users to control, validat
 4. [Technology Stack](#tech-stack)
 5. [Prerequisites](#prerequisites)
 6. [Setup Overview](#setup)
-7. [Setup BE](#setup-be)
-8. [Setup FE](#setup-fe)
+7. [Setup BackeEnd](#setup-be)
+8. [Setup FrontEnd](#setup-fe)
 9. [Contact Us](#contact-us)
 
 ## [Features](#features)
@@ -51,7 +53,7 @@ The following is a high level representation of the App Architecture:
 - Communication Encryption Protocol (TLS)
 - Tech Stack (React, UI5, Node.js, Docker)
 
-![Overview Diagram](https://static.wixstatic.com/media/9d2d43_498f333fa78f4c12bf4e0cd65905e44d~mv2.png)
+![Overview Diagram](https://static.wixstatic.com/media/9d2d43_66b5a5aec45d4149b276c1743883b2ac~mv2.png)
 Note: Seamless Integration: Syncing SAP Treasury Master Data to Google BigQuery, Paving the Way for Real-time Analysis in a dockerized App running on Cloud Run. Leveraging Cloud SQL to keep Activity & Approval logs.
 
 ## [Technology Stack](#tech-stack)
@@ -137,4 +139,4 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## [Contact Us: Do you have questions?](#contact-us)
 If you have questions, you would like to see a Demo or to discuss about how to build SAP Solutions leveraging Google Cloud Platform Cortex Framework (Data Foundation and/or App Layer) feel free to contact us at [sap-on-gcp@diff.com](mailto:sap-on-gcp@diff.com), 
-You can also find us in [LinkedIn](https://www.linkedin.com/company/diff-consulting/) or in our [YouTube](https://www.youtube.com/@diff-consulting) Channel where you can see Demos of this and other SAP + GCP Solutions leveraging Google Cloud Cortex Framework.
+You can also find us in [LinkedIn](https://www.linkedin.com/company/diff-consulting/) or in our [YouTube](https://www.youtube.com/playlist?list=PLlUWdSjbRKiNjm96SDYI66Y95pAbjGdPu) Channel where you can see Demos of this and other SAP + GCP Solutions leveraging Google Cloud Cortex Framework.
