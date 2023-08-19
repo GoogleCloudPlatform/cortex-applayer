@@ -20,4 +20,4 @@ The currently available samples are:
 
 ## Interested in contributing?
 
-If you are interested in submitting an application, please reach out to cortex-support@google.com, so we can help you understand if this will be the right path for you. 
+If you are interested in submitting an application, please reach out to cortex-support@google.com, so we can evaluate if this will be the right path for you. 
