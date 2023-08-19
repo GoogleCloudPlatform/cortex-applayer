@@ -1,10 +1,10 @@
 # Cortex Application Layer - Collaboration repository
 
-This repository contains templates that allow partners to contribute with applicatins and add-ons created on top of Google Cloud Cortex frameworks.
+This repository contains templates that allow developers to contribute with tests, applications and add-ons created using [Google Cloud Cortex Framework Data Foundation]().
 
-Partners can contribute all of the code or just the code that interfaces with the foundation. This allows us to collaboratively develop solutions, have a single place to discover these innovative apps and helps the Cortex Engineering team to make sure the interfacing points remain operational throughout releases.
+Approved contributors can add code to test the touch-points between their solutions and Google Cloud Cortex Framework. This allows us to collaboratively develop solutions, have a single place to discover these innovative apps and helps the Cortex Engineering team to make sure the interfacing points remain operational throughout releases.
 
-![Cortex Application Layer](images/partner_repo.png)
+![Cortex Application Layer](images/partner_applayer.png)
 
 ## Deployment
 
@@ -12,8 +12,12 @@ Deployment instructions are independent to each partner-contributed application.
 
 ## Current Solutions
 
-The currently available solutions are:
+The currently available samples are:
 
-- Google ABAP SDK: Sample consumption of k-means clustering fo customers
-- Diff Consulting: Bank Data Validation accelerator
-- Growthloop: Salesforce integration to Ads
+-   [Cortex Applayer Sample](https://github.com/GoogleCloudPlatform/cortex-applayer/tree/main/apps/Cortex_Applayer_Sample): Sample Cloud Run application
+-   [Google ABAP SDK](https://github.com/GoogleCloudPlatform/cortex-applayer/tree/main/apps/Google_ABAP_SDK): Sample consumption of k-means clustering for customers
+-   [Diff Consulting](https://github.com/GoogleCloudPlatform/cortex-applayer/tree/main/apps/Diff_Smart_Treasury): Bank Data Validation accelerator
+
+## Interested in contributing?
+
+If you are interested in submitting an application, please reach out to cortex-support@google.com, so we can help you understand if this will be the right path for you. 

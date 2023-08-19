@@ -1,0 +1,20 @@
+{
+    "name": "cortex-pubsub-output",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Sample app layer output to pubsub",
+    "main": "index.js",
+    "author": "Google LLC",
+    "license": "Apache-2.0",
+    "scripts": {
+        "start": "node index.js"
+    },
+    "dependencies": {
+        "@google-cloud/pubsub": "^2.19.0",
+        "express": "^4.16.4"
+    },
+    "devDependencies": {
+        "eslint": "^8.11.0",
+        "eslint-config-google": "^0.14.0"
+    }
+}

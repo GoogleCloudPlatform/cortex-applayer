@@ -9,6 +9,12 @@ The ABAP SDK for Google Cloud provides ABAP client libraries for the following G
 -   Pub/Sub API v1
 -   Secret Manager API v1
 
-![ABAP SDK ](images/abap-sdk-single-window-interaction.png)
+![ABAP SDK](abap_sdk.png)
 
+The current sample integrates with the sample [Cortex Applayer](https://github.com/GoogleCloudPlatform/cortex-applayer/tree/main/apps/Cortex_Applayer_Sample).
+
+## Setup
+
+1. Install the [Google Cloud ABAP SDK](https://cloud.google.com/solutions/sap/docs/abap-sdk/latest/install-config#sdk_overview)
+2. Use [abapgit](https://abapgit.org/) to clone the current directory into your system
 
