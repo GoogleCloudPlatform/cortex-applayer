@@ -31,7 +31,7 @@ app.get('/', (req, res) => {
   return;
 });
 
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
   if (!req.body) {
     const msg = 'Invalid request - no body';
     console.log(`Error receving REQUEST: ${msg}`);
