@@ -17,6 +17,7 @@ import json
 import typing
 from urllib.parse import unquote, urlparse, parse_qs
 
+from google.api_core.client_info import ClientInfo
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.cloud import secretmanager
@@ -25,6 +26,8 @@ from simple_salesforce import Salesforce  # type: ignore
 
 # pylint:disable=wrong-import-position
 from sfdc2bq import sfdc2bq_replicate  # type: ignore
+
+SFDC2BQ_USER_AGENT = f"sfdc2bq/1.0 (GPN:SFDC2BQ;)"
 
 
 def replicate_sfdc_object_to_bq(
@@ -88,7 +91,10 @@ def replicate_sfdc_object_to_bq(
         bq_location (str, optional): BigQuery location. Defaults to "US".
     """
 
-    bq_client = bigquery.Client(project=bq_project_id, location=bq_location)
+    client_info = ClientInfo(user_agent=SFDC2BQ_USER_AGENT)
+    bq_client = bigquery.Client(project=bq_project_id,
+                                location=bq_location,
+                                client_info=client_info)
     try:
         _ = bq_client.get_dataset(bq_dataset_name)
     except NotFound:
