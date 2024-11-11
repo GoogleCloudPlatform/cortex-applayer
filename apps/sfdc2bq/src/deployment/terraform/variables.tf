@@ -74,6 +74,12 @@ variable "use_existing_dataset" {
   default     = false
 }
 
+variable "store_sfdc_metadata" {
+  type        = bool
+  description = "Whether to store SFDC object metadata in _sfdc_metadata table"
+  default     = true
+}
+
 variable "bq_location" {
   type        = string
   description = "The location of the BigQuery dataset"

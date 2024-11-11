@@ -26,6 +26,8 @@ class BigQueryHelper:
     """BigQuery-specific operations of SFDC ingestion"""
 
     _TEMP_TABLE_EXPIRATION_DAYS_ = 1
+    _JOB_LABEL_KEY = "requestor"
+    _JOB_LABEL_VALUE = "sfdc2bq"
 
     def __init__(
         self,
@@ -157,6 +159,9 @@ class BigQueryHelper:
             allow_jagged_rows=True,
             null_marker="",
             write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+            labels={
+                BigQueryHelper._JOB_LABEL_KEY: BigQueryHelper._JOB_LABEL_VALUE
+            }
         )
 
         self._ingestion_started = True
@@ -307,9 +312,16 @@ class BigQueryHelper:
                 # If it fails before, BigQuery will roll it back automatically.
                 query += " COMMIT TRANSACTION;"
 
+                query_config = (self.client.default_query_job_config or
+                                bigquery.QueryJobConfig())
+                query_config.labels = query_config.labels or {}
+                query_config.labels[BigQueryHelper._JOB_LABEL_KEY] = (
+                    BigQueryHelper._JOB_LABEL_VALUE
+                )
                 query_job = self.client.query(query=query,
                                               project=table_obj.project,
-                                              location=table_obj.location)  # type: ignore
+                                              location=table_obj.location,  # type: ignore
+                                              job_config=query_config)
                 query_job.result()
                 bytes_processes = query_job.total_bytes_processed
                 slot_milliseconds = query_job.slot_millis
@@ -346,10 +358,16 @@ class BigQueryHelper:
             self.timestamp_field_name = self.timestamp_field_name
             table_obj = self.client.get_table(self.target_table_ref)
             self.target_table_ref = table_obj.reference
-
+            query_config = (self.client.default_query_job_config or
+                            bigquery.QueryJobConfig())
+            query_config.labels = query_config.labels or {}
+            query_config.labels[BigQueryHelper._JOB_LABEL_KEY] = (
+                BigQueryHelper._JOB_LABEL_VALUE
+            )
             query_job = self.client.query(
                 f"SELECT MAX({self.timestamp_field_name})"
-                f" FROM `{self.target_table_ref}`")
+                f" FROM `{self.target_table_ref}`",
+                job_config=query_config)
 
             # This query is guaranteed to return one column and one row.
             last_update_timestamp = list(query_job)[0][0]

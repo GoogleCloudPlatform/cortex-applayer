@@ -34,6 +34,7 @@ class SalesforceToBigquery:
     _MAX_RECORDS_PER_BULK_BATCH_ = 100000
     _CSV_STREAM_CHUNK_SIZE_ = 1024*1024
     _RECORD_STAMP_NAME_ = "Recordstamp"
+    _SFDC_METADATA_TABLE = "_sfdc_metadata"
 
     @staticmethod
     def replicate(simple_sf_connection: Salesforce,
@@ -45,7 +46,8 @@ class SalesforceToBigquery:
                   text_encoding: str = "utf-8",
                   include_non_standard_fields: typing.Union[
                       bool, typing.Iterable[str]] = False,
-                  exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None) -> None:
+                  exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None,
+                  store_metadata: bool = False) -> None:
         """Method to extract data from Salesforce to BigQuery
 
         Args:
@@ -60,6 +62,8 @@ class SalesforceToBigquery:
                 replicate non-standard fields, True/False or a list of names
             exclude_standard_fields (Iterable[str]): list of standard fields
                 to exclude from replication
+            store_metadata (bool, optional): Whether to store SFDC object metadata.
+                                             Defaults to False.
         """
 
         logging.info(
@@ -187,6 +191,15 @@ class SalesforceToBigquery:
 
         # sfdc_to_bq_field_map and source_fields are initialized at this point
 
+        if store_metadata:
+            SalesforceToBigquery._store_metadata(
+                bq_client=bq_client,
+                project_id=project_id,
+                dataset_id=dataset_name,
+                object_name=desc["name"],  # type: ignore
+                output_table_name=output_table_name,  # type: ignore
+                metadata=desc)  # type: ignore
+
         try:
             bq = BigQueryHelper(
                 project_id=project_id,
@@ -256,6 +269,42 @@ class SalesforceToBigquery:
             " %f seconds.",
             end_time - start_time,
         )
+
+    @staticmethod
+    def _store_metadata(bq_client: bigquery.Client,
+                        project_id: str,
+                        dataset_id: str,
+                        object_name: str,
+                        output_table_name: str,
+                        metadata: typing.Dict[typing.Any, typing.Any]):
+        job_config = (bq_client.default_query_job_config or
+                      bigquery.QueryJobConfig())
+        job_config.query_parameters = [
+            bigquery.ScalarQueryParameter(
+                "metadata_string", "STRING", json.dumps(metadata))
+        ]
+        metadata_table_name = (f"{project_id}.{dataset_id}."
+                               f"{SalesforceToBigquery._SFDC_METADATA_TABLE}")
+        upsert_query = f"""
+            CREATE TABLE IF NOT EXISTS
+              `{metadata_table_name}`
+              (object_name STRING, table_name STRING, metadata STRING);
+
+            MERGE INTO `{metadata_table_name}` AS target
+            USING (
+              SELECT
+                  "{object_name}" AS object_name,
+                  "{output_table_name}" AS table_name
+            ) AS source
+            ON target.object_name = source.object_name
+            WHEN MATCHED THEN
+              UPDATE SET table_name = source.table_name,
+                         metadata = @metadata_string
+            WHEN NOT MATCHED THEN
+              INSERT (object_name, table_name, metadata)
+              VALUES (source.object_name, source.table_name, @metadata_string);
+        """
+        _ = bq_client.query(upsert_query, job_config=job_config).result()
 
     @staticmethod
     def _bulk_start_job(sfdc_connection: Salesforce,

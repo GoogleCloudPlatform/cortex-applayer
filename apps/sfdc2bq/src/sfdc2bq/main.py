@@ -57,14 +57,16 @@ def _run_object_replication(sfdc_auth_parameters: typing.Union[str, typing.Dict[
                             bq_project_id: str,
                             bq_dataset_name: str,
                             bq_output_table_name: typing.Optional[str] = None,
-                            bq_location: str = "US"):
+                            bq_location: str = "US",
+                            store_metadata: bool = False):
     threading.current_thread().name = f"SFDC: `{api_name}`"
     try:
         replicate_sfdc_object_to_bq(
             sfdc_auth_parameters=sfdc_auth_parameters, api_name=api_name,
             bq_project_id=bq_project_id, bq_dataset_name=bq_dataset_name,
             bq_output_table_name=bq_output_table_name,
-            bq_location=bq_location)
+            bq_location=bq_location,
+            store_metadata=store_metadata)
     except:
         logging.exception(
             "Fatal error when trying to replicate %s:", api_name)
@@ -102,6 +104,13 @@ def main(args: typing.Sequence[str]) -> int:
         type=str,
         required=False,
         default="US"
+    )
+    parser.add_argument(
+        "--store-sfdc-metadata",
+        help="Whether to store SFDC metadata in _sfdc_metadata table.",
+        type=str,
+        default="false",
+        required=False,
     )
     parser.add_argument(
         "--sfdc-connection-secret",
@@ -150,6 +159,7 @@ def main(args: typing.Sequence[str]) -> int:
     dataset = options.dataset
     objects_str = options.objects_to_replicate
     sfdc_objects = [i.strip() for i in objects_str.split(",")]
+    store_metadata = (options.store_sfdc_metadata.lower() == "true")
 
     # Handle multi-task runs
     if task_count > 1:
@@ -183,7 +193,8 @@ def main(args: typing.Sequence[str]) -> int:
                 pool.submit(_run_object_replication,
                             sfdc_auth_parameters=auth_secret, api_name=obj,
                             bq_project_id=project, bq_dataset_name=dataset,
-                            bq_location=location))
+                            bq_location=location,
+                            store_metadata=store_metadata))
         except Exception:
             logging.exception("Fatal error when trying to replicate %s:", obj)
             err += 1

@@ -143,6 +143,10 @@ resource "google_cloud_run_v2_job" "default" {
           name  = "SFDC_OBJECTS"
           value = var.sfdc_objects
         }
+        env {
+          name  = "STORE_SFDC_METADATA"
+          value = tostring(var.store_sfdc_metadata)
+        }
 
         resources {
           limits = {
