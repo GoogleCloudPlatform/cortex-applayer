@@ -17,6 +17,7 @@ import json
 import typing
 from urllib.parse import unquote, urlparse, parse_qs
 
+from google.api_core.client_info import ClientInfo
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 from google.cloud import secretmanager
@@ -26,6 +27,8 @@ from simple_salesforce import Salesforce  # type: ignore
 # pylint:disable=wrong-import-position
 from sfdc2bq import sfdc2bq_replicate  # type: ignore
 
+SFDC2BQ_USER_AGENT = f"sfdc2bq/1.0 (GPN:SFDC2BQ;)"
+
 
 def replicate_sfdc_object_to_bq(
     sfdc_auth_parameters: typing.Union[str, typing.Dict[str, str]],
@@ -33,7 +36,8 @@ def replicate_sfdc_object_to_bq(
     bq_project_id: str,
     bq_dataset_name: str,
     bq_output_table_name: typing.Optional[str] = None,
-    bq_location: str = "US"
+    bq_location: str = "US",
+    store_metadata: bool = False
 ) -> None:
     """Replicates a single SFDC object to BigQuery
 
@@ -86,9 +90,14 @@ def replicate_sfdc_object_to_bq(
         bq_dataset_name (str): Target BigQuery dataset name.
         bq_output_table_name (str, optional): Target BigQuery table name.
         bq_location (str, optional): BigQuery location. Defaults to "US".
+        store_metadata (bool, optional): Whether to store SFDC object metadata.
+                                        Defaults to False.
     """
 
-    bq_client = bigquery.Client(project=bq_project_id, location=bq_location)
+    client_info = ClientInfo(user_agent=SFDC2BQ_USER_AGENT)
+    bq_client = bigquery.Client(project=bq_project_id,
+                                location=bq_location,
+                                client_info=client_info)
     try:
         _ = bq_client.get_dataset(bq_dataset_name)
     except NotFound:
@@ -152,4 +161,5 @@ def replicate_sfdc_object_to_bq(
                       dataset_name=bq_dataset_name,
                       output_table_name=bq_output_table_name,
                       text_encoding="utf-8",
-                      include_non_standard_fields=True)
+                      include_non_standard_fields=True,
+                      store_metadata=store_metadata)

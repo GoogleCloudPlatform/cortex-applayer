@@ -35,7 +35,8 @@ def sfdc2bq_replicate(
         text_encoding: str = "utf-8",
         include_non_standard_fields: typing.Union[bool,
                                                   typing.Iterable[str]] = False,
-        exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None) -> None:
+        exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None,
+        store_metadata: bool = False) -> None:
     """Method to extract data from Salesforce to BigQuery
 
     Args:
@@ -50,6 +51,8 @@ def sfdc2bq_replicate(
             non-standard fields, True/False or a list of names
         exclude_standard_fields (Iterable[str]): list of standard fields
             to exclude from replication
+        store_metadata (bool, optional): Whether to store SFDC object metadata.
+                                         Defaults to False.
     """
 
     SalesforceToBigquery.replicate(
@@ -61,4 +64,5 @@ def sfdc2bq_replicate(
         output_table_name=output_table_name,
         text_encoding=text_encoding,
         include_non_standard_fields=include_non_standard_fields,
-        exclude_standard_fields=exclude_standard_fields)
+        exclude_standard_fields=exclude_standard_fields,
+        store_metadata=store_metadata)

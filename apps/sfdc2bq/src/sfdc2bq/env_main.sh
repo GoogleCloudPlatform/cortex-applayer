@@ -22,6 +22,7 @@ python3 main.py \
     --dataset "${BQ_DATASET}" \
     --location "${BQ_LOCATION}" \
     --sfdc-connection-secret "${SFDC_AUTH_SECRET}" \
-    --objects-to-replicate "${SFDC_OBJECTS}"
+    --objects-to-replicate "${SFDC_OBJECTS}" \
+    --store-sfdc-metadata "${STORE_SFDC_METADATA}"
 
 echo "✅"
