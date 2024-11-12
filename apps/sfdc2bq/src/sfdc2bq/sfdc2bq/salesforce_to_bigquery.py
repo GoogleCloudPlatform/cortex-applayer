@@ -21,6 +21,7 @@ import time
 import typing
 
 from google.cloud import bigquery
+from google.cloud.exceptions import BadRequest
 
 from simple_salesforce import Salesforce  # type: ignore
 from simple_salesforce.util import exception_handler
@@ -277,19 +278,20 @@ class SalesforceToBigquery:
                         object_name: str,
                         output_table_name: str,
                         metadata: typing.Dict[typing.Any, typing.Any]):
-        job_config = (bq_client.default_query_job_config or
-                      bigquery.QueryJobConfig())
-        job_config.query_parameters = [
-            bigquery.ScalarQueryParameter(
-                "metadata_string", "STRING", json.dumps(metadata))
-        ]
         metadata_table_name = (f"{project_id}.{dataset_id}."
                                f"{SalesforceToBigquery._SFDC_METADATA_TABLE}")
-        upsert_query = f"""
-            CREATE TABLE IF NOT EXISTS
-              `{metadata_table_name}`
-              (object_name STRING, table_name STRING, metadata STRING);
+        table = bigquery.Table(metadata_table_name,
+                               schema=[
+                                   bigquery.SchemaField(
+                                       "object_name", "STRING"),
+                                   bigquery.SchemaField(
+                                       "table_name", "STRING"),
+                                   bigquery.SchemaField(
+                                       "metadata", "STRING")
+                               ])
+        _ = bq_client.create_table(table, exists_ok=True)
 
+        upsert_query = f"""
             MERGE INTO `{metadata_table_name}` AS target
             USING (
               SELECT
@@ -302,11 +304,26 @@ class SalesforceToBigquery:
                          metadata = @metadata_string
             WHEN NOT MATCHED THEN
               INSERT (object_name, table_name, metadata)
-              VALUES (source.object_name, source.table_name, @metadata_string);
+              VALUES (source.object_name, source.table_name, @metadata_string)
         """
-        _ = bq_client.query(upsert_query, job_config=job_config).result()
+        job_config = (bq_client.default_query_job_config or
+                      bigquery.QueryJobConfig())
+        job_config.query_parameters = [
+            bigquery.ScalarQueryParameter(
+                "metadata_string", "STRING", json.dumps(metadata))
+        ]
+        job_config.priority = bigquery.QueryPriority.BATCH
 
-    @staticmethod
+        # Workaround for concurrent updates error.
+        while True:
+            try:
+                bq_client.query(upsert_query, job_config=job_config).result()
+                break
+            except BadRequest as ex:
+                if "Could not serialize access to table" not in ex.message:
+                    raise
+
+    @ staticmethod
     def _bulk_start_job(sfdc_connection: Salesforce,
                         query: str,
                         include_deleted: bool = False) -> str:

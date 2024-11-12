@@ -318,6 +318,7 @@ class BigQueryHelper:
                 query_config.labels[BigQueryHelper._JOB_LABEL_KEY] = (
                     BigQueryHelper._JOB_LABEL_VALUE
                 )
+                query_config.priority = bigquery.QueryPriority.BATCH
                 query_job = self.client.query(query=query,
                                               project=table_obj.project,
                                               location=table_obj.location,  # type: ignore
