@@ -383,6 +383,8 @@ class SalesforceToBigquery:
         # Retrieve job results.
         while locator != "null":
             headers = sfdc_connection.headers.copy()
+            headers["Accept"] = "text/csv"
+            headers["Accept-Encoding"] = "gzip"
             result_path = (
                 f"jobs/query/{job_id}/results?maxRecords="
                 f"{SalesforceToBigquery._MAX_RECORDS_PER_BULK_BATCH_}")
