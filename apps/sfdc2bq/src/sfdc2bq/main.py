@@ -58,7 +58,8 @@ def _run_object_replication(sfdc_auth_parameters: typing.Union[str, typing.Dict[
                             bq_dataset_name: str,
                             bq_output_table_name: typing.Optional[str] = None,
                             bq_location: str = "US",
-                            store_metadata: bool = False):
+                            store_metadata: bool = False,
+                            csv_delimiter: str = "COMMA"):
     threading.current_thread().name = f"SFDC: `{api_name}`"
     try:
         replicate_sfdc_object_to_bq(
@@ -66,7 +67,8 @@ def _run_object_replication(sfdc_auth_parameters: typing.Union[str, typing.Dict[
             bq_project_id=bq_project_id, bq_dataset_name=bq_dataset_name,
             bq_output_table_name=bq_output_table_name,
             bq_location=bq_location,
-            store_metadata=store_metadata)
+            store_metadata=store_metadata,
+            csv_delimiter=csv_delimiter)
     except:
         logging.exception(
             "Fatal error when trying to replicate %s:", api_name)
@@ -125,6 +127,15 @@ def main(args: typing.Sequence[str]) -> int:
         required=False,
         default="Account,Case,Contact,CurrencyType,DatedConversionRate,Event,Lead,Opportunity,RecordType,Task,User"
     )
+    parser.add_argument(
+        "--sfdc-csv-delimiter",
+        help="The column delimiter used for CSV job data when exporting from Salesforce",
+        type=str,
+        required=False,
+        choices=["COMMA", "TAB", "PIPE", "SEMICOLON", "BACKQUOTE", "CARET"],
+        default="COMMA"
+    )
+
     options, _ = parser.parse_known_args(args)
 
     task_count_str = os.getenv("CLOUD_RUN_TASK_COUNT", "")
@@ -161,6 +172,8 @@ def main(args: typing.Sequence[str]) -> int:
     sfdc_objects = [i.strip() for i in objects_str.split(",")]
     store_metadata = (options.store_sfdc_metadata.lower() == "true")
 
+    csv_delimiter = options.sfdc_csv_delimiter
+
     # Handle multi-task runs
     if task_count > 1:
         num_objects = len(sfdc_objects)
@@ -194,7 +207,8 @@ def main(args: typing.Sequence[str]) -> int:
                             sfdc_auth_parameters=auth_secret, api_name=obj,
                             bq_project_id=project, bq_dataset_name=dataset,
                             bq_location=location,
-                            store_metadata=store_metadata))
+                            store_metadata=store_metadata,
+                            csv_delimiter=csv_delimiter))
         except Exception:
             logging.exception("Fatal error when trying to replicate %s:", obj)
             err += 1

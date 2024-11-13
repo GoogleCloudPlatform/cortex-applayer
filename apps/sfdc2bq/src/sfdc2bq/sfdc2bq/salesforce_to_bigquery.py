@@ -21,6 +21,7 @@ import time
 import typing
 
 from google.cloud import bigquery
+from google.cloud.exceptions import BadRequest
 
 from simple_salesforce import Salesforce  # type: ignore
 from simple_salesforce.util import exception_handler
@@ -47,7 +48,8 @@ class SalesforceToBigquery:
                   include_non_standard_fields: typing.Union[
                       bool, typing.Iterable[str]] = False,
                   exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None,
-                  store_metadata: bool = False) -> None:
+                  store_metadata: bool = False,
+                  csv_delimiter: str = "COMMA") -> None:
         """Method to extract data from Salesforce to BigQuery
 
         Args:
@@ -64,6 +66,9 @@ class SalesforceToBigquery:
                 to exclude from replication
             store_metadata (bool, optional): Whether to store SFDC object metadata.
                                              Defaults to False.
+            csv_delimiter (str, optional): The column delimiter used for CSV when
+                                           exporting from Salesforce and loading
+                                           to BigQuery. Defaults to "COMMA".
         """
 
         logging.info(
@@ -200,6 +205,21 @@ class SalesforceToBigquery:
                 output_table_name=output_table_name,  # type: ignore
                 metadata=desc)  # type: ignore
 
+        if csv_delimiter == "COMMA":
+            csv_delimiter_bq = ","
+        elif csv_delimiter == "TAB":
+            csv_delimiter_bq = "\t"
+        elif csv_delimiter == "PIPE":
+            csv_delimiter_bq = "|"
+        elif csv_delimiter == "SEMICOLON":
+            csv_delimiter_bq = ";"
+        elif csv_delimiter == "BACKQUOTE":
+            csv_delimiter_bq = "`"
+        elif csv_delimiter == "CARET":
+            csv_delimiter_bq = "^"
+        else:
+            csv_delimiter_bq = ","
+
         try:
             bq = BigQueryHelper(
                 project_id=project_id,
@@ -210,7 +230,9 @@ class SalesforceToBigquery:
                 timestamp_field_name=SalesforceToBigquery._RECORD_STAMP_NAME_,
                 has_is_deleted=has_is_deleted,
                 has_is_archived=has_is_archived,
-                bigquery_client=bq_client)
+                bigquery_client=bq_client,
+                csv_delimiter=csv_delimiter_bq,
+                text_encoding=text_encoding)
 
             include_deleted = bq.incremental_ingestion
 
@@ -232,7 +254,7 @@ class SalesforceToBigquery:
                 logging.info("This is an incremental replication job.")
 
             job_id = SalesforceToBigquery._bulk_start_job(
-                simple_sf_connection, query, include_deleted)
+                simple_sf_connection, query, include_deleted, csv_delimiter)
 
             logging.info("Running SFDC job %s and loading results to BigQuery.",
                          job_id)
@@ -277,19 +299,20 @@ class SalesforceToBigquery:
                         object_name: str,
                         output_table_name: str,
                         metadata: typing.Dict[typing.Any, typing.Any]):
-        job_config = (bq_client.default_query_job_config or
-                      bigquery.QueryJobConfig())
-        job_config.query_parameters = [
-            bigquery.ScalarQueryParameter(
-                "metadata_string", "STRING", json.dumps(metadata))
-        ]
         metadata_table_name = (f"{project_id}.{dataset_id}."
                                f"{SalesforceToBigquery._SFDC_METADATA_TABLE}")
-        upsert_query = f"""
-            CREATE TABLE IF NOT EXISTS
-              `{metadata_table_name}`
-              (object_name STRING, table_name STRING, metadata STRING);
+        table = bigquery.Table(metadata_table_name,
+                               schema=[
+                                   bigquery.SchemaField(
+                                       "object_name", "STRING"),
+                                   bigquery.SchemaField(
+                                       "table_name", "STRING"),
+                                   bigquery.SchemaField(
+                                       "metadata", "STRING")
+                               ])
+        _ = bq_client.create_table(table, exists_ok=True)
 
+        upsert_query = f"""
             MERGE INTO `{metadata_table_name}` AS target
             USING (
               SELECT
@@ -302,14 +325,30 @@ class SalesforceToBigquery:
                          metadata = @metadata_string
             WHEN NOT MATCHED THEN
               INSERT (object_name, table_name, metadata)
-              VALUES (source.object_name, source.table_name, @metadata_string);
+              VALUES (source.object_name, source.table_name, @metadata_string)
         """
-        _ = bq_client.query(upsert_query, job_config=job_config).result()
+        job_config = (bq_client.default_query_job_config or
+                      bigquery.QueryJobConfig())
+        job_config.query_parameters = [
+            bigquery.ScalarQueryParameter(
+                "metadata_string", "STRING", json.dumps(metadata))
+        ]
+        job_config.priority = bigquery.QueryPriority.BATCH
 
-    @staticmethod
+        # Workaround for concurrent updates error.
+        while True:
+            try:
+                bq_client.query(upsert_query, job_config=job_config).result()
+                break
+            except BadRequest as ex:
+                if "Could not serialize access to table" not in ex.message:
+                    raise
+
+    @ staticmethod
     def _bulk_start_job(sfdc_connection: Salesforce,
                         query: str,
-                        include_deleted: bool = False) -> str:
+                        include_deleted: bool = False,
+                        columnDelimiter: str = "COMMA") -> str:
         """Starts Salesforce Bulk API 2.0 query job.
 
         Args:
@@ -328,6 +367,7 @@ class SalesforceToBigquery:
             "contentType": "CSV",
             "columnDelimiter": "COMMA",
             "lineEnding": "LF",
+            "columnDelimiter": columnDelimiter
         }
 
         # Start a job
@@ -485,10 +525,12 @@ class SalesforceToBigquery:
             sfdc_to_bq_field_map (typing.Dict[str, typing.Tuple[str, str]]):
                 Salesforce-to-BigQuery field name mapping dictionary.
             text_encoding: Text encoding to use.
+            csv_delimiter: CSV delimiter to use.
 
         Returns:
             int: Number of added records.
         """
+
         batch_count = 0
         record_count = 0
         started_bq_ingestion = False

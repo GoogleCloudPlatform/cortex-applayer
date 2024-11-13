@@ -23,6 +23,7 @@ python3 main.py \
     --location "${BQ_LOCATION}" \
     --sfdc-connection-secret "${SFDC_AUTH_SECRET}" \
     --objects-to-replicate "${SFDC_OBJECTS}" \
-    --store-sfdc-metadata "${STORE_SFDC_METADATA}"
+    --store-sfdc-metadata "${STORE_SFDC_METADATA}" \
+    --sfdc-csv-delimiter "${SFDC_EXPORT_CSV_DELIMETER}"
 
 echo "✅"

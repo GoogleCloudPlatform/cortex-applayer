@@ -36,7 +36,8 @@ def sfdc2bq_replicate(
         include_non_standard_fields: typing.Union[bool,
                                                   typing.Iterable[str]] = False,
         exclude_standard_fields: typing.Optional[typing.Iterable[str]] = None,
-        store_metadata: bool = False) -> None:
+        store_metadata: bool = False,
+        csv_delimiter: str = "COMMA") -> None:
     """Method to extract data from Salesforce to BigQuery
 
     Args:
@@ -53,6 +54,9 @@ def sfdc2bq_replicate(
             to exclude from replication
         store_metadata (bool, optional): Whether to store SFDC object metadata.
                                          Defaults to False.
+        csv_delimiter (str, optional): The column delimiter used for CSV when
+                                       exporting from Salesforce and loading
+                                       to BigQuery. Defaults to "COMMA".
     """
 
     SalesforceToBigquery.replicate(
@@ -65,4 +69,5 @@ def sfdc2bq_replicate(
         text_encoding=text_encoding,
         include_non_standard_fields=include_non_standard_fields,
         exclude_standard_fields=exclude_standard_fields,
-        store_metadata=store_metadata)
+        store_metadata=store_metadata,
+        csv_delimiter=csv_delimiter)
