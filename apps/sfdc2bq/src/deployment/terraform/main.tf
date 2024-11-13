@@ -147,6 +147,10 @@ resource "google_cloud_run_v2_job" "default" {
           name  = "STORE_SFDC_METADATA"
           value = tostring(var.store_sfdc_metadata)
         }
+        env {
+          name  = "SFDC_EXPORT_CSV_DELIMETER"
+          value = tostring(var.sfdc_export_csv_delimeter)
+        }
 
         resources {
           limits = {

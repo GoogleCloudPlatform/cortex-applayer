@@ -37,7 +37,8 @@ def replicate_sfdc_object_to_bq(
     bq_dataset_name: str,
     bq_output_table_name: typing.Optional[str] = None,
     bq_location: str = "US",
-    store_metadata: bool = False
+    store_metadata: bool = False,
+    csv_delimiter: str = "COMMA"
 ) -> None:
     """Replicates a single SFDC object to BigQuery
 
@@ -92,6 +93,8 @@ def replicate_sfdc_object_to_bq(
         bq_location (str, optional): BigQuery location. Defaults to "US".
         store_metadata (bool, optional): Whether to store SFDC object metadata.
                                         Defaults to False.
+        csv_delimiter (str, optional): The column delimiter used for CSV when
+                                       exporting from Salesforce. Defaults to "COMMA".
     """
 
     client_info = ClientInfo(user_agent=SFDC2BQ_USER_AGENT)
@@ -162,4 +165,5 @@ def replicate_sfdc_object_to_bq(
                       output_table_name=bq_output_table_name,
                       text_encoding="utf-8",
                       include_non_standard_fields=True,
-                      store_metadata=store_metadata)
+                      store_metadata=store_metadata,
+                      csv_delimiter=csv_delimiter)

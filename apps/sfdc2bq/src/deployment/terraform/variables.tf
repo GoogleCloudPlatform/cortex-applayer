@@ -93,6 +93,17 @@ variable "sfdc_objects" {
   nullable    = false
 }
 
+variable "sfdc_export_csv_delimeter" {
+  type        = string
+  description = "The column delimiter used for CSV job data when exporting from Salesforce"
+  default     = "COMMA"
+  nullable    = false
+  validation {
+    condition     = var.sfdc_export_csv_delimeter == "COMMA" || var.sfdc_export_csv_delimeter == "TAB" || var.sfdc_export_csv_delimeter == "BACKQUOTE" || var.sfdc_export_csv_delimeter == "CARET" || var.sfdc_export_csv_delimeter == "PIPE" || var.sfdc_export_csv_delimeter == "SEMICOLON"
+    error_message = "Must one of the following values: COMMA, TAB, BACKQUOTE, CARET, PIPE, SEMICOLON"
+  }
+}
+
 variable "parallel_tasks" {
   type        = number
   description = "Number of parallel jobs. Can be up to the numbber of replicated Salesforce objects"

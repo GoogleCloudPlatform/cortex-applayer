@@ -40,6 +40,8 @@ class BigQueryHelper:
         has_is_deleted: bool,
         has_is_archived: bool,
         bigquery_client: typing.Optional[bigquery.Client] = None,
+        csv_delimiter: str = ",",
+        text_encoding: str = "utf-8",
     ):
         """BigQueryHelper constructor.
 
@@ -54,6 +56,10 @@ class BigQueryHelper:
             has_is_archived (bool): Whether the table has IsArchived field.
             bigquery_client (bigquery.Client, optional): BigQuery client to use.
                 Defaults to None.
+            csv_delimiter (str, optional): The column delimiter used for CSV when
+                                           loading to BigQuery.
+                                           Defaults to ",".
+            text_encoding (str, optional): CSV text encoding. Defaults to "utf-8"
         """
         self.client = bigquery_client if bigquery_client else bigquery.Client()
         self.project_id = project_id
@@ -62,6 +68,8 @@ class BigQueryHelper:
         self.schema = []
         self.job_config: typing.Optional[bigquery.LoadJobConfig] = None
         self.last_job_timestamp: typing.Optional[datetime] = None
+        self.csv_delimiter = csv_delimiter
+        self.text_encoding = text_encoding.upper()
 
         self._ingestion_started = False
 
@@ -161,14 +169,16 @@ class BigQueryHelper:
             write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
             labels={
                 BigQueryHelper._JOB_LABEL_KEY: BigQueryHelper._JOB_LABEL_VALUE
-            }
+            },
+            field_delimiter=self.csv_delimiter,
+            encoding=self.text_encoding
         )
 
         self._ingestion_started = True
 
     def load_batch_csv(
         self,
-        csv_batch_file: str,
+        csv_batch_file: str
     ) -> int:
         """Loads CSV file into BigQuery
 
