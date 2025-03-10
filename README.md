@@ -1,4 +1,4 @@
-**IMPORTANT: This repository will be deprecated on Mar 11, 2025. This product will no longer be supported.** 
+**IMPORTANT: This repository will be deprecated on Mar 11, 2025. This solution will no longer be supported.** 
 
 # Cortex Application Layer - Collaboration repository
 
