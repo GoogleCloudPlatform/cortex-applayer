@@ -1,3 +1,5 @@
+**IMPORTANT: This repository will be deprecated on Mar 11, 2025. This solution will no longer be supported.** 
+
 # Cortex Application Layer - Collaboration repository
 
 This repository contains templates that allow developers to contribute with tests, applications and add-ons created using [Google Cloud Cortex Framework Data Foundation]().
